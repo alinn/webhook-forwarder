@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package webhook;
+
+option go_package = "github.com/alinn/webhook-forwarder/proto";
+
+// Webhook service for forwarding webhooks from server to client
+service WebhookService {
+  // Register a webhook listener and get a webhook URL
+  rpc RegisterListener(RegisterListenerRequest) returns (RegisterListenerResponse);
+  
+  // Stream webhook requests from server to client
+  rpc StreamWebhooks(StreamWebhooksRequest) returns (stream WebhookRequest);
+  
+  // Send webhook response back to server
+  rpc SendWebhookResponse(WebhookResponse) returns (WebhookResponseAck);
+}
+
+message RegisterListenerRequest {
+  string local_url = 1; // The local URL to forward webhooks to
+  string webhook_id = 2; // Optional webhook ID to use (generated if not provided)
+}
+
+message RegisterListenerResponse {
+  string webhook_id = 1;  // Unique ID for the webhook
+  string webhook_url = 2; // Public URL to configure with 3rd party
+  bool success = 3;
+  string error = 4;
+}
+
+message StreamWebhooksRequest {
+  string webhook_id = 1; // The webhook ID to listen for
+}
+
+message WebhookRequest {
+  string webhook_id = 1;
+  string method = 2;
+  string path = 3;
+  map<string, string> headers = 4;
+  bytes body = 5;
+  string request_id = 6; // Unique ID for this request
+}
+
+message WebhookResponse {
+  string request_id = 1;
+  int32 status_code = 2;
+  map<string, string> headers = 3;
+  bytes body = 4;
+}
+
+message WebhookResponseAck {
+  bool success = 1;
+  string error = 2;
+}

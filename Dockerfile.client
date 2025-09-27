@@ -1,0 +1,22 @@
+FROM golang:1.24 AS buildimg
+LABEL authors="go@alinnica.com"
+
+
+COPY . /go/src/webhook-forwarder-client
+
+WORKDIR /go/src/webhook-forwarder-client
+
+RUN go mod download
+
+ENV GOOS=linux 
+ENV GOARCH=arm64 
+ENV CGO_ENABLED=0 
+
+RUN go build -o /go/bin/webhook-forwarder-client cmd/client/main.go
+
+FROM scratch
+
+COPY --from=buildimg /go/bin/webhook-forwarder-client /webhook-forwarder-client
+COPY --from=buildimg /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+ENTRYPOINT ["/webhook-forwarder-client"]
