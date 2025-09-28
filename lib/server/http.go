@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -25,6 +26,12 @@ func (s *HttpServer) ListenAndServe(addr string) error {
 	return http.ListenAndServe(addr, nil)
 }
 
+type Challenge struct {
+	Token     string `json:"token"`
+	Challenge string `json:"challenge"`
+	Type      string `json:"type"`
+}
+
 func (s *HttpServer) Webhook(w http.ResponseWriter, r *http.Request) {
 	hookID := r.PathValue("hookId")
 
@@ -44,6 +51,13 @@ func (s *HttpServer) Webhook(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+	challenge := Challenge{}
+	err = json.Unmarshal(body, &challenge)
+	if err == nil && challenge.Type == "url_verification" {
+		w.Header().Set("Content-Type", "text/plain")
+		_, _ = w.Write([]byte(challenge.Challenge))
 		return
 	}
 
