@@ -78,13 +78,7 @@ func handleWebhook(localURL string) func(req *pb.WebhookRequest) (*pb.WebhookRes
 
 		// Use the local URL from the registration
 
-		// Create the full URL
-		fullURL := localURL + req.Path
-		if req.Path == "" || req.Path == "/" {
-			fullURL = localURL
-		}
-
-		httpReq, err := http.NewRequest(req.Method, fullURL, bytes.NewReader(req.Body))
+		httpReq, err := http.NewRequest(req.Method, localURL, bytes.NewReader(req.Body))
 		if err != nil {
 			return &pb.WebhookResponse{
 				RequestId:  req.RequestId,
